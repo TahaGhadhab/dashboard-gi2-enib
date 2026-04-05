@@ -1,6 +1,6 @@
 import { useKpis } from '@/hooks/useKpis';
 import { KPICard } from '@/components/KPICard';
-import { Loader2, Star, BookOpen, Building, Users, TrendingUp, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Loader2, Star, BookOpen, Building, Users, ThumbsUp, ThumbsDown } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,

@@ -1,12 +1,11 @@
 import { useKpis } from '@/hooks/useKpis';
 import { KPICard } from '@/components/KPICard';
-import { Loader2, Award, Briefcase, TrendingUp, Building2, GraduationCap } from 'lucide-react';
+import { Loader2, Briefcase, TrendingUp, Building2, GraduationCap } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 
-const COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function Encadrement() {
   const { data, loading, error } = useKpis('encadrement');

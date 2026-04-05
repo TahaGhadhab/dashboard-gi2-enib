@@ -1,6 +1,6 @@
 import { useKpis } from '@/hooks/useKpis';
 import { KPICard } from '@/components/KPICard';
-import { Loader2, Handshake, MapPin, Mic2, FlaskConical, AlertTriangle, Users } from 'lucide-react';
+import { Loader2, Handshake, MapPin, Mic2, FlaskConical, AlertTriangle } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
