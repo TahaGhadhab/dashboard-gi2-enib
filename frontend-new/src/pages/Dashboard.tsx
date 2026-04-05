@@ -82,7 +82,7 @@ export default function Dashboard() {
         />
         <KPICard
           value={k.taux_double_diplome != null ? `${k.taux_double_diplome}%` : '—'}
-          label="Double diplôme M2"
+          label="Double diplôme"
           icon={<Award className="h-6 w-6" />}
           variant="success"
         />

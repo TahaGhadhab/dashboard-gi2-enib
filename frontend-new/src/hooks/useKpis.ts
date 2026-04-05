@@ -3,7 +3,7 @@ import api from '../services/api';
 import { useFilters } from '../context/FilterContext';
 
 export function useKpis(module: string) {
-  const { anneeUniv } = useFilters();
+  const { anneeUniv, promo } = useFilters();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,12 @@ export function useKpis(module: string) {
     setLoading(true);
     setError(null);
 
-    api.get(`/${module}/kpis`, { params: { annee_univ: anneeUniv } })
+    const params: any = { annee_univ: anneeUniv };
+    if (promo && promo !== 'Toutes promos') {
+      params.niveau = promo;
+    }
+
+    api.get(`/${module}/kpis`, { params })
       .then(res => {
         if (!cancelled) {
           setData(res.data);
@@ -28,7 +33,7 @@ export function useKpis(module: string) {
       });
 
     return () => { cancelled = true; };
-  }, [module, anneeUniv]);
+  }, [module, anneeUniv, promo]);
 
   return { data, loading, error };
 }

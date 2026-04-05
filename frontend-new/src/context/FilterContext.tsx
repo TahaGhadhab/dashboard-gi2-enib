@@ -11,7 +11,7 @@ interface FilterContextType {
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 const ANNEES = ['2024-2025', '2023-2024', '2022-2023', '2021-2022'];
-const PROMOS = ['Toutes promos', 'L3', 'M1', 'M2'];
+const PROMOS = ['Toutes promos', '1ere', '2eme', '3eme'];
 
 export function FilterProvider({ children }: { children: ReactNode }) {
   const [anneeUniv, setAnneeUniv] = useState('2024-2025');
