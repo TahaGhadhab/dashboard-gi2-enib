@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 226 50% 8%; /* Very dark deep blue #080c16 */
+    --foreground: 210 40% 98%;
+
+    --card: 226 40% 12%; /* #121828 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 226 50% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%; /* Bright vibrant blue #2563eb */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 226 30% 18%; /* Dark secondary blue */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 226 30% 16%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 226 30% 16%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 226 20% 25%;
+    --input: 226 20% 20%;
+    --ring: 217 91% 60%;
+
+    --radius: 1.25rem; /* very rounded cards */
+  }
+
+  .light-mode {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 35%; /* Darker muted text for better contrast */
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 85%; /* More prominent border in light mode */
+    --input: 214.3 31.8% 85%;
+    --ring: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground tracking-tight h-screen overflow-hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  :root:not(.light-mode) body {
+    background: radial-gradient(circle at 10% 20%, rgba(15, 23, 42, 0.8) 0%, rgba(8, 12, 22, 1) 100%);
+  }
+
+  .light-mode body {
+    background: radial-gradient(circle at 10% 20%, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 1) 100%);
+  }
+
+  /* Custom glass classes */
+  .glass-panel {
+    @apply bg-[#131932]/60 backdrop-blur-xl border border-white/5 shadow-xl transition-colors duration-300;
+  }
+
+  .light-mode .glass-panel {
+    @apply bg-white/80 border-slate-300 shadow-lg;
+  }
+}
+
+/* Fix for Dropdown visibility in Light Mode */
+.light-mode .bg-\[\#131932\] {
+  @apply bg-white border-slate-200;
+}
+
+/* Theme-aware Card Gradients */
+.bg-card-success {
+  background: linear-gradient(to bottom right, rgba(13, 148, 136, 0.25), rgba(15, 23, 42, 0.4));
+}
+.bg-card-warning {
+  background: linear-gradient(to bottom right, rgba(147, 51, 234, 0.25), rgba(15, 23, 42, 0.4));
+}
+.bg-card-neutral {
+  background: linear-gradient(to bottom right, rgba(37, 99, 235, 0.25), rgba(15, 23, 42, 0.4));
+}
+
+.light-mode .bg-card-success {
+  background: linear-gradient(to bottom right, rgba(20, 184, 166, 0.1), rgba(255, 255, 255, 0.9));
+}
+.light-mode .bg-card-warning {
+  background: linear-gradient(to bottom right, rgba(168, 85, 247, 0.1), rgba(255, 255, 255, 0.9));
+}
+.light-mode .bg-card-neutral {
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.1), rgba(255, 255, 255, 0.9));
+}
+
+/* Global text overrides for light mode if needed */
+.light-mode .text-slate-400 {
+  @apply text-slate-600;
+}
+.light-mode .text-slate-300 {
+  @apply text-slate-700;
+}
+
