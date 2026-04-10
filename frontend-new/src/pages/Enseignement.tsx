@@ -6,6 +6,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { CHART_COLORS, CHART_TOOLTIP_STYLE, RECHARTS_CURSOR_STYLE } from '@/constants/theme';
+import { cn } from '@/lib/utils';
 
 export default function Enseignement() {
   const { data, loading, error } = useKpis('enseignement');

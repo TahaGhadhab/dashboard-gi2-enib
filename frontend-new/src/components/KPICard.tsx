@@ -5,7 +5,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 
 interface KPICardProps {
   label: string;
-  value: string | number;
+  value: string | number | null | undefined;
   icon: ReactNode;
   trend?: number;
   reverseTrend?: boolean; // if true, positive trend is red (e.g. absences)
@@ -96,7 +96,7 @@ export function KPICard({ label, value, icon, trend, reverseTrend, variant = 'ne
           "text-[2rem] leading-none font-semibold font-mono tracking-tight",
           isEmpty ? "text-muted-text italic text-sm" : "text-primary-text"
         )}>
-          {displayValue}
+          {isEmpty ? 'Aucune donnée' : displayValue}
         </h3>
       </div>
     </div>
