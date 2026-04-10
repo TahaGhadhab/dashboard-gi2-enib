@@ -25,7 +25,7 @@ export function KPICard({ label, value, icon, trend, reverseTrend, variant = 'ne
   const animatedValue = useCountUp(isEmpty ? 0 : (value as string | number));
   
   // Format display value
-  let displayValue: string | number | null = isEmpty ? "Aucune donnée" : value;
+  let displayValue: string | number | null | undefined = isEmpty ? "Aucune donnée" : value;
   if (!isEmpty && typeof value === 'string' && value.includes('%')) {
     displayValue = `${animatedValue}%`;
   } else if (!isEmpty && typeof value === 'string' && value.includes('/')) {
