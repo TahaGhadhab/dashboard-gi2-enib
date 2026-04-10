@@ -21,8 +21,8 @@ export function BriefingBanner({ alerts = [], className }: BriefingBannerProps) 
   return (
     <div className={cn(
       "w-full mb-8 animate-[bannerSlideDown_0.3s_ease] overflow-hidden rounded-xl border transition-all",
-      hasAlerts 
-        ? "bg-[var(--accent-red-glow)] border-[var(--accent-red)]/20 shadow-[0_4px_20px_-4px_rgba(240,68,56,0.1)]" 
+      hasAlerts
+        ? "bg-[var(--accent-red-glow)] border-[var(--accent-red)]/20 shadow-[0_4px_20px_-4px_rgba(240,68,56,0.1)]"
         : "bg-[var(--accent-teal-glow)] border-[var(--accent-teal)]/20 shadow-[0_4px_20px_-4px_rgba(15,204,176,0.1)]",
       className
     )}>
@@ -56,7 +56,7 @@ export function BriefingBanner({ alerts = [], className }: BriefingBannerProps) 
                   <span className="text-sm font-medium text-primary-text">{alert.message}</span>
                 </div>
                 {alert.module && (
-                  <NavLink 
+                  <NavLink
                     to={`/${alert.module}`}
                     className="flex items-center gap-1.5 text-xs font-bold text-accent-red hover:underline transition-all"
                   >
