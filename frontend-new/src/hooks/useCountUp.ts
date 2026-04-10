@@ -40,7 +40,7 @@ export function useCountUp(target: number | string, duration: number = 1200) {
     window.requestAnimationFrame(step);
   }, [targetNumber, duration]);
 
-  if (isNaN(targetNumber)) return null;
+  if (isNaN(targetNumber)) return 0;
   
   return isDecimal ? count.toFixed(1) : Math.floor(count);
 }

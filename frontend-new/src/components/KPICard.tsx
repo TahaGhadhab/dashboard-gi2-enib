@@ -22,10 +22,10 @@ export function KPICard({ label, value, icon, trend, reverseTrend, variant = 'ne
   const isEmpty = value === null || value === undefined || value === '' || value === '—';
   
   // Animate numeric values
-  const animatedValue = useCountUp(isEmpty ? 0 : value);
+  const animatedValue = useCountUp(isEmpty ? 0 : (value as string | number));
   
   // Format display value
-  let displayValue = isEmpty ? "Aucune donnée" : value;
+  let displayValue: string | number | null = isEmpty ? "Aucune donnée" : value;
   if (!isEmpty && typeof value === 'string' && value.includes('%')) {
     displayValue = `${animatedValue}%`;
   } else if (!isEmpty && typeof value === 'string' && value.includes('/')) {
