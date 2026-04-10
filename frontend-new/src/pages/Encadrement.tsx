@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { useKpis } from '@/hooks/useKpis';
 import { KPICard } from '@/components/KPICard';
 import { Loader2, Briefcase, Users, FileWarning, TrendingUp } from 'lucide-react';
@@ -60,8 +61,8 @@ export default function Encadrement() {
 
       <div className="glass-panel rounded-xl p-6">
         <h3 className="text-sm font-bold text-secondary-text uppercase tracking-widest mb-6 flex items-center gap-2">
-           <FileWarning className="h-4 w-4 text-accent-red" />
-           PFE sans rapport déposé
+          <FileWarning className="h-4 w-4 text-accent-red" />
+          PFE sans rapport déposé
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
