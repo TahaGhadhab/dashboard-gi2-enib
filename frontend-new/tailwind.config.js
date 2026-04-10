@@ -22,8 +22,37 @@ const config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: "var(--bg-base)",
+        surface: "var(--bg-surface)",
+        elevated: "var(--bg-elevated)",
+        "primary-text": "var(--text-primary)",
+        "secondary-text": "var(--text-secondary)",
+        "muted-text": "var(--text-muted)",
+        "inverse-text": "var(--text-inverse)",
+        
+        accent: {
+          blue: "var(--accent-blue)",
+          teal: "var(--accent-teal)",
+          amber: "var(--accent-amber)",
+          red: "var(--accent-red)",
+          purple: "var(--accent-purple)",
+        },
+        
+        glow: {
+          blue: "var(--accent-blue-glow)",
+          teal: "var(--accent-teal-glow)",
+          amber: "var(--accent-amber-glow)",
+          red: "var(--accent-red-glow)",
+        },
+
+        kpi: {
+          ok: "var(--kpi-ok)",
+          warning: "var(--kpi-warning)",
+          danger: "var(--kpi-danger)",
+          neutral: "var(--kpi-neutral)",
+        },
+
+        /* Shadcn compat */
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -40,33 +69,11 @@ const config = {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["'DM Sans'", "sans-serif"],
+        mono: ["'JetBrains Mono'", "monospace"],
       },
-      backgroundImage: {
-        'dashboard-bg': "linear-gradient(to bottom right, #0B1021, #120B29)",
-        'card-success': "linear-gradient(to bottom right, rgba(13, 148, 136, 0.25), rgba(15, 23, 42, 0.4))",
-        'card-warning': "linear-gradient(to bottom right, rgba(147, 51, 234, 0.25), rgba(15, 23, 42, 0.4))",
-        'card-neutral': "linear-gradient(to bottom right, rgba(37, 99, 235, 0.25), rgba(15, 23, 42, 0.4))",
-      }
     },
   },
   plugins: [],

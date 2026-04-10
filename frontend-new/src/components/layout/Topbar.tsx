@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Download, FileText, Sun, Moon } from 'lucide-react';
+import { ChevronDown, Download, FileText, Sun, Moon, LayoutDashboard, BookOpen, Users, Briefcase, SmilePlus, Globe } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useFilters, ANNEES, PROMOS } from '@/context/FilterContext';
 import { useTheme } from '@/context/ThemeContext';
 import api from '@/services/api';
+import { cn } from '@/lib/utils';
 
 const moduleMap: Record<string, string> = {
   '/': 'dashboard',
@@ -23,10 +24,21 @@ const titleMap: Record<string, string> = {
   '/rayonnement': 'Module Rayonnement',
 };
 
+const moduleConfig: Record<string, { icon: any, color: string, glow: string }> = {
+  'dashboard': { icon: LayoutDashboard, color: 'text-accent-blue', glow: 'icon-glow-blue' },
+  'enseignement': { icon: BookOpen, color: 'text-accent-teal', glow: 'icon-glow-teal' },
+  'rh': { icon: Users, color: 'text-accent-purple', glow: 'icon-glow-purple' },
+  'encadrement': { icon: Briefcase, color: 'text-accent-amber', glow: 'icon-glow-amber' },
+  'satisfaction': { icon: SmilePlus, color: 'text-accent-red', glow: 'icon-glow-red' },
+  'rayonnement': { icon: Globe, color: 'text-accent-cyan', glow: 'icon-glow-cyan' },
+};
+
 export function Topbar() {
   const location = useLocation();
   const currentModule = moduleMap[location.pathname] || 'dashboard';
   const title = titleMap[location.pathname] || 'Tableau de bord';
+  const config = moduleConfig[currentModule];
+  const ModuleIcon = config.icon;
 
   const { anneeUniv, setAnneeUniv, promo, setPromo } = useFilters();
   const { theme, toggleTheme } = useTheme();
@@ -36,7 +48,6 @@ export function Topbar() {
   const anneeRef = useRef<HTMLDivElement>(null);
   const promoRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (anneeRef.current && !anneeRef.current.contains(e.target as Node)) setAnneeOpen(false);
@@ -63,7 +74,6 @@ export function Topbar() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('CSV export failed:', err);
-      alert('Erreur lors de l\'export CSV. Vérifiez que le backend est démarré.');
     }
   };
 
@@ -72,99 +82,131 @@ export function Topbar() {
   };
 
   return (
-    <header className="relative z-[100] flex flex-col gap-6 p-6 md:p-8 pb-4">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">{title}</h2>
-        <p className="text-sm text-muted-foreground font-medium mt-0.5">Département Génie Industriel</p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Filters */}
-        <div className="flex items-center rounded-full bg-secondary/80 backdrop-blur-md border border-border p-1 px-2 h-11">
-          {/* Year Filter */}
-          <div ref={anneeRef} className="relative">
-            <button
-              onClick={() => { setAnneeOpen(!anneeOpen); setPromoOpen(false); }}
-              className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 opacity-70"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              {anneeUniv}
-              <ChevronDown className={`h-4 w-4 ml-1 opacity-50 transition-transform ${anneeOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {anneeOpen && (
-              <div className="absolute top-full left-0 mt-2 w-44 rounded-xl bg-card border border-border shadow-2xl py-1 z-[110] backdrop-blur-xl">
-                {ANNEES.map(a => (
-                  <button
-                    key={a}
-                    onClick={() => { setAnneeUniv(a); setAnneeOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                      a === anneeUniv ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                    }`}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
-            )}
+    <header className="relative z-[40] flex flex-col gap-6 p-6 md:px-10 py-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-xl bg-surface border border-[var(--border-default)] shadow-sm icon-glow-target",
+            config.glow,
+            config.color
+          )}>
+            <ModuleIcon className="h-6 w-6" />
           </div>
-
-          <div className="h-4 w-[1px] bg-border mx-1"></div>
-
-          {/* Promo Filter */}
-          <div ref={promoRef} className="relative">
-            <button
-              onClick={() => { setPromoOpen(!promoOpen); setAnneeOpen(false); }}
-              className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {promo}
-              <ChevronDown className={`h-4 w-4 ml-1 opacity-50 transition-transform ${promoOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {promoOpen && (
-              <div className="absolute top-full left-0 mt-2 w-44 rounded-xl bg-card border border-border shadow-2xl py-1 z-[110] backdrop-blur-xl">
-                {PROMOS.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => { setPromo(p); setPromoOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                      p === promo ? 'text-primary font-semibold bg-primary/10' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div>
+            <h2 className="text-2xl font-bold text-primary-text tracking-tight font-sans">{title}</h2>
+            <p className="text-xs text-muted-text font-bold uppercase tracking-widest mt-1">
+              Département Génie Industriel — ENIB
+            </p>
           </div>
         </div>
 
-        <div className="h-6 w-[1px] bg-border mx-2"></div>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Filters Group */}
+          <div className="flex items-center rounded-lg bg-surface border border-[var(--border-default)] p-1 shadow-sm">
+            {/* Year Filter */}
+            <div ref={anneeRef} className="relative">
+              <button
+                onClick={() => { setAnneeOpen(!anneeOpen); setPromoOpen(false); }}
+                aria-haspopup="listbox"
+                aria-expanded={anneeOpen}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary-text hover:text-primary-text transition-colors"
+              >
+                AU {anneeUniv}
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform opacity-50", anneeOpen && "rotate-180")} />
+              </button>
+              {anneeOpen && (
+                <div role="listbox" className="absolute top-full left-0 mt-2 w-44 rounded-lg bg-elevated border border-[var(--border-default)] shadow-xl py-1 z-[110]">
+                  {ANNEES.map(a => (
+                    <button
+                      key={a}
+                      role="option"
+                      aria-selected={a === anneeUniv}
+                      onClick={() => { setAnneeUniv(a); setAnneeOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors",
+                        a === anneeUniv ? "bg-accent-blue text-white" : "text-secondary-text hover:bg-[var(--bg-hover)] hover:text-primary-text"
+                      )}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary/80 backdrop-blur-md border border-border text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
-        >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
+            <div className="h-4 w-[1px] bg-[var(--border-subtle)]" />
 
-        {/* CSV Export */}
-        <button
-          onClick={handleCSVExport}
-          className="flex h-11 items-center gap-2 rounded-full bg-secondary/80 backdrop-blur-md border border-border px-6 text-sm font-semibold text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          CSV
-        </button>
+            {/* Promo Filter */}
+            <div ref={promoRef} className="relative">
+              <button
+                onClick={() => { setPromoOpen(!promoOpen); setAnneeOpen(false); }}
+                aria-haspopup="listbox"
+                aria-expanded={promoOpen}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary-text hover:text-primary-text transition-colors"
+              >
+                {promo}
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform opacity-50", promoOpen && "rotate-180")} />
+              </button>
+              {promoOpen && (
+                <div role="listbox" className="absolute top-full left-0 mt-2 w-44 rounded-lg bg-elevated border border-[var(--border-default)] shadow-xl py-1 z-[110]">
+                  {PROMOS.map(p => (
+                    <button
+                      key={p}
+                      role="option"
+                      aria-selected={p === promo}
+                      onClick={() => { setPromo(p); setPromoOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors",
+                        p === promo ? "bg-accent-blue text-white" : "text-secondary-text hover:bg-[var(--bg-hover)] hover:text-primary-text"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-        {/* PDF Export */}
-        <button
-          onClick={handlePDFExport}
-          className="flex h-11 items-center gap-2 rounded-full bg-primary/90 px-6 text-sm font-semibold text-white hover:bg-primary transition-colors shadow-[0_0_15px_rgba(37,99,235,0.4)]"
-        >
-          <FileText className="h-4 w-4" />
-          PDF
-        </button>
+          <div className="hidden md:block h-8 w-[1px] bg-[var(--border-subtle)] mx-1" />
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'}
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface border border-[var(--border-default)] text-secondary-text hover:text-primary-text transition-all shadow-sm icon-glow-target icon-glow-blue"
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5 text-accent-amber" /> : <Moon className="h-5 w-5 text-accent-blue" />}
+          </button>
+
+          {/* Export Group */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCSVExport}
+              title="Exporter en CSV"
+              aria-label="Exporter les données au format CSV"
+              className="flex h-10 items-center gap-2 px-4 rounded-lg bg-surface border border-[var(--border-default)] text-xs font-bold uppercase tracking-widest text-secondary-text hover:bg-[var(--bg-hover)] hover:text-primary-text transition-all shadow-sm icon-glow-target icon-glow-teal"
+            >
+              <Download className="h-4 w-4 text-accent-teal" />
+              CSV
+            </button>
+
+            <button
+              onClick={handlePDFExport}
+              title="Imprimer / PDF"
+              aria-label="Générer un rapport PDF"
+              className={cn(
+                "flex h-10 items-center gap-2 px-6 rounded-lg text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] icon-glow-target",
+                theme === 'light'
+                  ? "bg-surface border border-[var(--border-default)] text-secondary-text hover:bg-[var(--bg-hover)] shadow-sm icon-glow-blue"
+                  : "bg-accent-blue text-white hover:bg-accent-blue/90 shadow-lg shadow-accent-blue/25"
+              )}
+            >
+              <FileText className={cn("h-4 w-4", theme === 'light' ? "text-accent-blue" : "text-white")} />
+              PDF
+            </button>
+          </div>
+        </div>
       </div>
     </header>
   );

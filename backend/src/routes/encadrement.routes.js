@@ -6,18 +6,35 @@ const router = Router();
 router.get('/kpis', async (req, res, next) => {
   try {
     const annee = req.query.annee_univ || process.env.ANNEE_UNIV;
+    const niveau = req.query.niveau;
+
+    let qPfe = supabase.from('pfe_fiches').select('*, entreprises(nom, secteur), etudiants!inner(nom, prenom, niveau)').eq('annee_univ', annee).is('deleted_at', null);
+    let qPjm = supabase.from('pjm_fiches').select('*, modules_heures(nom_module), etudiants!inner(niveau)').is('deleted_at', null);
+    let qAmp = supabase.from('amp_fiches').select('*, etudiants!inner(nom, prenom, niveau)').is('deleted_at', null);
+
+    // Global level filter from Topbar
+    if (niveau) {
+      qPfe = qPfe.eq('etudiants.niveau', niveau);
+      qPjm = qPjm.eq('etudiants.niveau', niveau);
+      qAmp = qAmp.eq('etudiants.niveau', niveau);
+    } else {
+      // Default mappings per user rules
+      qPfe = qPfe.eq('etudiants.niveau', '3eme');
+      qPjm = qPjm.eq('etudiants.niveau', '2eme');
+      qAmp = qAmp.eq('etudiants.niveau', '1ere');
+    }
 
     const [pfeEncRes, pfeEvalRes, pfeFichesRes, pfeDeboucheRes,
       pjmEvalRes, pjmFichesRes, ampEvalRes, ampFichesRes,
       entreprisesRes, permanentsRes] = await Promise.all([
-      supabase.from('pfe_encadrement').select('*, permanents(nom, prenom), pfe_fiches(annee_univ)').is('deleted_at', null),
-      supabase.from('pfe_evaluation').select('*, pfe_fiches(annee_univ)').is('deleted_at', null),
-      supabase.from('pfe_fiches').select('*, entreprises(nom, secteur), etudiants(nom, prenom)').eq('annee_univ', annee).is('deleted_at', null),
-      supabase.from('pfe_debouche').select('*, pfe_fiches(annee_univ)').is('deleted_at', null),
-      supabase.from('pjm_evaluation').select('*, permanents(nom, prenom), pjm_fiches(theme, semestre)').is('deleted_at', null),
-      supabase.from('pjm_fiches').select('*, modules_heures(nom_module)').is('deleted_at', null),
-      supabase.from('amp_evaluation').select('*, permanents(nom, prenom), amp_fiches(sujet, semestre)').is('deleted_at', null),
-      supabase.from('amp_fiches').select('*, etudiants(nom, prenom)').is('deleted_at', null),
+      supabase.from('pfe_encadrement').select('*, permanents(nom, prenom), pfe_fiches!inner(annee_univ, etudiants!inner(niveau))').is('deleted_at', null),
+      supabase.from('pfe_evaluation').select('*, pfe_fiches!inner(annee_univ, etudiants!inner(niveau))').is('deleted_at', null),
+      qPfe,
+      supabase.from('pfe_debouche').select('*, pfe_fiches!inner(annee_univ, etudiants!inner(niveau))').is('deleted_at', null),
+      supabase.from('pjm_evaluation').select('*, permanents(nom, prenom), pjm_fiches!inner(theme, semestre, etudiants!inner(niveau))').is('deleted_at', null),
+      qPjm,
+      supabase.from('amp_evaluation').select('*, permanents(nom, prenom), amp_fiches!inner(sujet, semestre, etudiants!inner(niveau))').is('deleted_at', null),
+      qAmp,
       supabase.from('entreprises').select('*').is('deleted_at', null),
       supabase.from('permanents').select('id_enseignant, nom, prenom').is('deleted_at', null),
     ]);
@@ -62,14 +79,14 @@ router.get('/kpis', async (req, res, next) => {
       if (!ev) continue;
       const n = permMap[enc.id_enseignant] || `Ens. ${enc.id_enseignant}`;
       if (!pfeNotes[n]) pfeNotes[n] = [];
-      pfeNotes[n].push(((ev.note_rapport||0) + (ev.note_soutenance||0) + (ev.note_jury||0)) / 3);
+      pfeNotes[n].push(((ev.note_rapport || 0) + (ev.note_soutenance || 0) + (ev.note_jury || 0)) / 3);
     }
     const m3_02 = {
       chartData: Object.entries(pfeNotes).map(([enc, notes]) => ({
-        encadrant: enc, moyenne: Math.round(10 * notes.reduce((a,b)=>a+b,0) / notes.length) / 10,
+        encadrant: enc, moyenne: Math.round(10 * notes.reduce((a, b) => a + b, 0) / notes.length) / 10,
       })),
       value: pfeEval.length > 0
-        ? Math.round(10 * pfeEval.reduce((s,e) => s + ((e.note_rapport||0)+(e.note_soutenance||0)+(e.note_jury||0))/3, 0) / pfeEval.length) / 10
+        ? Math.round(10 * pfeEval.reduce((s, e) => s + ((e.note_rapport || 0) + (e.note_soutenance || 0) + (e.note_jury || 0)) / 3, 0) / pfeEval.length) / 10
         : null,
     };
 
@@ -79,31 +96,31 @@ router.get('/kpis', async (req, res, next) => {
       const f = pjmFiches.find(f => f.id_pjm === e.id_pjm);
       const mod = f?.modules_heures?.nom_module || 'Inconnu';
       if (!pjmByMod[mod]) pjmByMod[mod] = [];
-      pjmByMod[mod].push(((e.note_rapport||0) + (e.note_presentation||0)) / 2);
+      pjmByMod[mod].push(((e.note_rapport || 0) + (e.note_presentation || 0)) / 2);
     }
     const m3_03 = {
       chartData: Object.entries(pjmByMod).map(([m, notes]) => ({
-        module: m, moyenne: Math.round(10 * notes.reduce((a,b)=>a+b,0) / notes.length) / 10,
+        module: m, moyenne: Math.round(10 * notes.reduce((a, b) => a + b, 0) / notes.length) / 10,
       })),
       value: pjmEval.length > 0
-        ? Math.round(10 * pjmEval.reduce((s,e) => s + ((e.note_rapport||0)+(e.note_presentation||0))/2, 0) / pjmEval.length) / 10
+        ? Math.round(10 * pjmEval.reduce((s, e) => s + ((e.note_rapport || 0) + (e.note_presentation || 0)) / 2, 0) / pjmEval.length) / 10
         : null,
     };
 
     // M3-04: Note moyenne AMP par semestre
     const ampBySem = {};
     for (const e of ampEval) {
-      const f = (ampFichesRes.data||[]).find(f => f.id_amp === e.id_amp);
+      const f = (ampFichesRes.data || []).find(f => f.id_amp === e.id_amp);
       const sem = f?.semestre || 'Inconnu';
       if (!ampBySem[sem]) ampBySem[sem] = [];
       ampBySem[sem].push(e.note_memoire || 0);
     }
     const m3_04 = {
       chartData: Object.entries(ampBySem).map(([s, notes]) => ({
-        semestre: s, moyenne: Math.round(10 * notes.reduce((a,b)=>a+b,0) / notes.length) / 10,
+        semestre: s, moyenne: Math.round(10 * notes.reduce((a, b) => a + b, 0) / notes.length) / 10,
       })),
       value: ampEval.length > 0
-        ? Math.round(10 * ampEval.reduce((s,e) => s + (e.note_memoire||0), 0) / ampEval.length) / 10
+        ? Math.round(10 * ampEval.reduce((s, e) => s + (e.note_memoire || 0), 0) / ampEval.length) / 10
         : null,
     };
 

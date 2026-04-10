@@ -22,47 +22,47 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20 text-primary shadow-lg shadow-primary/20">
+    <div className="flex min-h-screen items-center justify-center bg-base p-4">
+      <div className="w-full max-w-md space-y-10">
+        {/* Branding */}
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-blue/10 text-accent-blue shadow-lg shadow-accent-blue/5 border border-accent-blue/20">
             <BookMarked className="h-8 w-8" />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white">ENIB — Dept. GI</h1>
-            <p className="text-sm text-slate-400 mt-1">Tableau de Bord de Performance</p>
+            <h1 className="text-2xl font-bold text-primary-text uppercase tracking-[0.15em] font-sans">ENIB GI</h1>
+            <p className="text-xs font-bold text-muted-text uppercase tracking-widest mt-2">Performance Analytics Dashboard</p>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-8 space-y-6">
+        {/* Login Card */}
+        <form onSubmit={handleSubmit} className="glass-panel rounded-2xl p-8 space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Email</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-secondary-text ml-1">Email Personnel</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="admin@enib.fr"
               required
-              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-xl bg-elevated/50 border border-[var(--border-default)] px-5 py-3.5 text-sm text-primary-text placeholder-text-muted focus:border-accent-blue/50 focus:ring-4 focus:ring-accent-blue/10 outline-none transition-all font-medium"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Mot de passe</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-secondary-text ml-1">Mot de Passe</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-xl bg-elevated/50 border border-[var(--border-default)] px-5 py-3.5 text-sm text-primary-text placeholder-text-muted focus:border-accent-blue/50 focus:ring-4 focus:ring-accent-blue/10 outline-none transition-all font-medium"
             />
           </div>
 
           {error && (
-            <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-sm text-rose-400">
+            <div className="rounded-xl bg-accent-red/10 border border-accent-red/20 p-4 text-xs font-bold text-accent-red animate-shake uppercase tracking-tight">
               {error}
             </div>
           )}
@@ -70,12 +70,16 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3 px-4 text-white font-semibold hover:bg-primary/90 transition-colors shadow-[0_0_20px_rgba(37,99,235,0.3)] disabled:opacity-50"
+            className="w-full h-14 flex items-center justify-center gap-3 rounded-xl bg-accent-blue text-white text-sm font-bold uppercase tracking-widest hover:bg-accent-blue/90 disabled:opacity-50 transition-all shadow-lg shadow-accent-blue/20"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogIn className="h-5 w-5" />}
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? 'Authentification...' : 'Se Connecter'}
           </button>
         </form>
+
+        <p className="text-center text-[10px] text-muted-text uppercase tracking-widest font-bold">
+          Accès Réservé au Personnel ENIB
+        </p>
       </div>
     </div>
   );

@@ -7,9 +7,13 @@ const router = Router();
 router.get('/kpis', async (req, res, next) => {
   try {
     const annee = req.query.annee_univ || process.env.ANNEE_UNIV;
+    const niveau = req.query.niveau;
+
+    let qRep = supabase.from('satisfaction_reponses').select('*').eq('annee_univ', annee).is('deleted_at', null);
+    if (niveau) qRep = qRep.eq('niveau', niveau);
 
     const [reponsesRes, matieresScoreRes] = await Promise.all([
-      supabase.from('satisfaction_reponses').select('*').eq('annee_univ', annee).is('deleted_at', null),
+      qRep,
       supabase.from('satisfaction_matieres').select('*, matieres(nom_matiere)').is('deleted_at', null),
     ]);
 

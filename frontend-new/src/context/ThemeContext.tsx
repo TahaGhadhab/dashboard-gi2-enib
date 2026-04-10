@@ -11,10 +11,25 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('enib-dashboard-theme');
+    return (saved as Theme) || 'dark';
+  });
 
   useEffect(() => {
-    document.documentElement.classList.toggle('light-mode', theme === 'light');
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    
+    // Support for both class-based (Tailwind dark mode) and data-attribute based theme
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+    
+    localStorage.setItem('enib-dashboard-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');

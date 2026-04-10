@@ -10,6 +10,17 @@ const router = Router();
 router.get('/kpis', async (req, res, next) => {
   try {
     const annee = req.query.annee_univ || process.env.ANNEE_UNIV;
+    const niveau = req.query.niveau;
+
+    let qResults = supabase.from('resultats_examens').select('*, etudiants!inner(niveau)').eq('annee_univ', annee).is('deleted_at', null);
+    let qAbs = supabase.from('absences_etudiants').select('*, etudiants!inner(niveau)').is('deleted_at', null);
+    let qEtus = supabase.from('etudiants').select('*').is('deleted_at', null);
+
+    if (niveau) {
+      qResults = qResults.eq('etudiants.niveau', niveau);
+      qAbs = qAbs.eq('etudiants.niveau', niveau);
+      qEtus = qEtus.eq('niveau', niveau);
+    }
 
     const [
       resultatsRes,
@@ -19,11 +30,11 @@ router.get('/kpis', async (req, res, next) => {
       etudiantsRes,
       matieresRes,
     ] = await Promise.all([
-      supabase.from('resultats_examens').select('*').eq('annee_univ', annee).is('deleted_at', null),
-      supabase.from('absences_etudiants').select('*').is('deleted_at', null),
+      qResults,
+      qAbs,
       supabase.from('couverture_cours').select('*, modules_heures(nom_module)').is('deleted_at', null),
       supabase.from('travaux_pratiques').select('*').is('deleted_at', null),
-      supabase.from('etudiants').select('*').is('deleted_at', null),
+      qEtus,
       supabase.from('matieres').select('*, modules_heures(nom_module)').is('deleted_at', null),
     ]);
 
@@ -66,14 +77,14 @@ router.get('/kpis', async (req, res, next) => {
     // ─── M1-09: Taux de validation modules ───
     const m1_09 = calcValidationModules(resultats, matieresRes.data || []);
 
-    // ─── M1-10: % Double diplôme M2 ───
-    const m2Students = etudiants.filter(e => e.niveau === 'M2');
-    const ddCount = m2Students.filter(e => e.double_diplome === true).length;
+    // ─── M1-10: % Double diplôme ───
+    const lvl2Students = etudiants.filter(e => e.niveau === '2eme');
+    const ddCount = lvl2Students.filter(e => e.double_diplome === true).length;
     const m1_10 = {
-      value: m2Students.length > 0 ? Math.round(1000 * ddCount / m2Students.length) / 10 : 0,
+      value: lvl2Students.length > 0 ? Math.round(1000 * ddCount / lvl2Students.length) / 10 : 0,
       nb_double_diplome: ddCount,
-      nb_m2: m2Students.length,
-      by_university: groupBy(m2Students.filter(e => e.double_diplome), 'universite_partenaire'),
+      nb_lvl2: lvl2Students.length,
+      by_university: groupBy(lvl2Students.filter(e => e.double_diplome), 'universite_partenaire'),
     };
 
     // ─── M1-11: Taux contrôle par semestre ───

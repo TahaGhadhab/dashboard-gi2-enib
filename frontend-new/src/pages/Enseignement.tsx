@@ -1,141 +1,108 @@
 import { useKpis } from '@/hooks/useKpis';
 import { KPICard } from '@/components/KPICard';
-import { Loader2, CheckCircle2, RefreshCcw, Users, AlertTriangle, FlaskConical } from 'lucide-react';
+import { Loader2, CheckCircle2, RefreshCcw, Users, Clock } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Cell
+  PieChart, Pie, Cell, Legend
 } from 'recharts';
-
-const COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+import { CHART_COLORS, CHART_TOOLTIP_STYLE, RECHARTS_CURSOR_STYLE } from '@/constants/theme';
 
 export default function Enseignement() {
   const { data, loading, error } = useKpis('enseignement');
 
-  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (error) return <div className="glass-panel rounded-2xl p-6 text-rose-400">Erreur: {error}</div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-accent-blue" /></div>;
+  if (error) return <div className="glass-panel rounded-xl p-6 text-accent-red font-bold">Erreur: {error}</div>;
 
   const k = data?.kpis || {};
 
   return (
-    <div className="space-y-8 max-w-7xl">
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        <KPICard value={`${k.m1_01_reussite_principale?.value ?? '—'}%`} label="Réussite S. Principale" icon={<CheckCircle2 className="h-6 w-6" />} variant="success" />
-        <KPICard value={`${k.m1_02_reussite_rattrapage?.value ?? '—'}%`} label="Réussite Rattrapage" icon={<RefreshCcw className="h-6 w-6" />} variant="warning" />
-        <KPICard value={`${k.m1_04_assiduite?.value ?? '—'}%`} label="Assiduité Globale" icon={<Users className="h-6 w-6" />} variant="neutral" />
-        <KPICard value={`${k.m1_08_tp_disponibles?.value ?? '—'}%`} label="TP Disponibles" icon={<FlaskConical className="h-6 w-6" />} variant="success" />
+    <div className="space-y-8 max-w-7xl px-4 md:px-10 pb-10">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <KPICard index={1} value={`${k.m1_01_reussite_principale?.value ?? '—'}%`} label="Réussite S. Principale" icon={<CheckCircle2 className="h-5 w-5" />} variant="success" />
+        <KPICard index={2} value={`${k.m1_02_reussite_totale?.value ?? '—'}%`} label="Réussite Totale" icon={<CheckCircle2 className="h-5 w-5" />} variant="success" />
+        <KPICard index={3} value={`${k.m1_04_taux_controle?.value ?? '—'}%`} label="Taux de Rattrapage" icon={<RefreshCcw className="h-5 w-5" />} variant="warning" reverseTrend />
+        <KPICard index={4} value={`${k.m1_05_assiduite_global?.value ?? '—'}%`} label="Assiduité Globale" icon={<Users className="h-5 w-5" />} variant="neutral" />
       </div>
 
-      {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Réussite par promo */}
-        <div className="glass-panel rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-foreground mb-4">Réussite par promotion</h3>
-          <ResponsiveContainer width="100%" height={280}>
+        {/* Taux de réussite par promotion */}
+        <div className="glass-panel rounded-xl p-6">
+          <h3 className="text-sm font-bold text-secondary-text uppercase tracking-widest mb-6">Réussite par Promotion</h3>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={k.m1_01_reussite_principale?.chartData || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
-              <XAxis dataKey="promo" stroke="currentColor" fontSize={12} className="text-muted-foreground" />
-              <YAxis stroke="currentColor" fontSize={12} domain={[0, 100]} className="text-muted-foreground" />
-              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }} />
-              <Bar dataKey="taux" radius={[8, 8, 0, 0]} name="Taux (%)">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+              <XAxis dataKey="niveau" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} unit="%" />
+              <Tooltip cursor={{ fill: 'var(--bg-hover)' }} contentStyle={CHART_TOOLTIP_STYLE} />
+              <Bar dataKey="taux" radius={[4, 4, 0, 0]} style={RECHARTS_CURSOR_STYLE}>
                 {(k.m1_01_reussite_principale?.chartData || []).map((_: any, i: number) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Assiduité mensuelle */}
-        <div className="glass-panel rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-foreground mb-4">Assiduité mensuelle</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={k.m1_04_assiduite?.chartData || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
-              <XAxis dataKey="mois" stroke="currentColor" fontSize={11} className="text-muted-foreground" />
-              <YAxis stroke="currentColor" fontSize={12} domain={[0, 100]} className="text-muted-foreground" />
-              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }} />
-              <Line type="monotone" dataKey="taux" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5, fill: '#3b82f6' }} name="Assiduité (%)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Couverture des cours */}
-        <div className="glass-panel rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Couverture des cours par module</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={k.m1_05_couverture?.chartData || []} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis type="number" stroke="#64748b" fontSize={12} domain={[0, 100]} />
-              <YAxis dataKey="module" type="category" stroke="#64748b" fontSize={10} width={120} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} />
-              <Bar dataKey="taux" radius={[0, 8, 8, 0]} fill="#06b6d4" name="Couverture (%)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Taux contrôle par semestre */}
-        <div className="glass-panel rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Taux de contrôle par semestre</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={k.m1_03_taux_controle?.chartData || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="semestre" stroke="#64748b" fontSize={12} />
-              <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} />
-              <Bar dataKey="taux" radius={[8, 8, 0, 0]} fill="#f59e0b" name="Taux contrôle (%)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Étudiants en alerte */}
-      {k.m1_07_etudiants_alerte?.students?.length > 0 && (
-        <div className="glass-panel rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-rose-400" />
-            Étudiants en alerte ({k.m1_07_etudiants_alerte.value})
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Nom</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Classe</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Moyenne</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">% Injustifiées</th>
-                </tr>
-              </thead>
-              <tbody>
-                {k.m1_07_etudiants_alerte.students.map((s: any, i: number) => (
-                  <tr key={i} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                    <td className="py-3 px-4 text-foreground font-medium">{s.prenom} {s.nom}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{s.classe}</td>
-                    <td className="py-3 px-4"><span className="text-rose-500 font-bold">{s.moyenne}</span></td>
-                    <td className="py-3 px-4"><span className="text-amber-600 dark:text-amber-400 font-bold">{s.pct_injustifiees}%</span></td>
-                  </tr>
+        {/* Moyenne par promo */}
+        <div className="glass-panel rounded-xl p-6">
+          <h3 className="text-sm font-bold text-secondary-text uppercase tracking-widest mb-6">Moyennes Générales</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={k.m1_03_moyenne_promo?.chartData || []}
+                cx="50%" cy="50%"
+                innerRadius={60} outerRadius={100}
+                paddingAngle={5}
+                dataKey="value"
+                nameKey="name"
+                stroke="none"
+                style={RECHARTS_CURSOR_STYLE}
+              >
+                {(k.m1_03_moyenne_promo?.chartData || []).map((_: any, i: number) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </Pie>
+              <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+              <Legend verticalAlign="bottom" height={36} formatter={(v) => <span className="text-xs font-bold text-secondary-text uppercase tracking-wider">{v}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-      )}
+      </div>
 
-      {/* Validation Modules */}
-      <div className="glass-panel rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Taux de validation par module</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={k.m1_09_validation_modules?.chartData || []} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis type="number" stroke="#64748b" fontSize={12} domain={[0, 100]} />
-            <YAxis dataKey="module" type="category" stroke="#64748b" fontSize={10} width={120} />
-            <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} />
-            <Bar dataKey="taux" radius={[0, 8, 8, 0]} fill="#10b981" name="Validation (%)" />
-          </BarChart>
-        </ResponsiveContainer>
+      {/* Remplissage de notes table */}
+      <div className="glass-panel rounded-xl p-6">
+        <h3 className="text-sm font-bold text-secondary-text uppercase tracking-widest mb-6 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-accent-blue" />
+          État du remplissage des notes
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-[var(--border-subtle)]">
+                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-muted-text">Matière / Élément</th>
+                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-muted-text">Notes Saisies</th>
+                <th className="py-3 px-4 text-xs font-bold uppercase tracking-widest text-muted-text">Statut</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {(k.m1_07_remplissage_notes?.details || []).map((m: any, i: number) => (
+                <tr key={i} className="group hover:bg-[var(--bg-hover)] transition-colors">
+                  <td className="py-4 px-4 text-sm font-bold text-primary-text">{m.matiere}</td>
+                  <td className="py-4 px-4 text-sm font-mono text-secondary-text">{m.saisies}/{m.total}</td>
+                  <td className="py-4 px-4">
+                    <span className={cn(
+                      "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                      m.complet ? "bg-accent-teal/10 text-accent-teal" : "bg-accent-amber/10 text-accent-amber"
+                    )}>
+                      {m.complet ? 'Complet' : 'Incomplet'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

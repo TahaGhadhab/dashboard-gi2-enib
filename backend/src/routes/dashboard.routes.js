@@ -10,6 +10,7 @@ const router = Router();
 router.get('/kpis', async (req, res, next) => {
   try {
     const annee = req.query.annee_univ || process.env.ANNEE_UNIV || '2024-2025';
+    const niveau = req.query.niveau;
 
     // Execute all KPI queries in parallel
     const [
@@ -30,16 +31,20 @@ router.get('/kpis', async (req, res, next) => {
       supabase.rpc('calc_assiduite'),
       supabase.rpc('calc_occupation_rh', { p_annee: annee }),
       // Score satisfaction — AVG of 4 scores
-      supabase
-        .from('satisfaction_reponses')
-        .select('score_cours, score_encadrement, score_infra, score_vie_etudiante')
-        .eq('annee_univ', annee)
-        .is('deleted_at', null),
-      // Double diplome M2
+      (() => {
+        let q = supabase
+          .from('satisfaction_reponses')
+          .select('score_cours, score_encadrement, score_infra, score_vie_etudiante')
+          .eq('annee_univ', annee)
+          .is('deleted_at', null);
+        if (niveau) q = q.eq('niveau', niveau);
+        return q;
+      })(),
+      // Double diplôme (User map: 2eme)
       supabase
         .from('etudiants')
         .select('double_diplome, niveau')
-        .eq('niveau', 'M2')
+        .eq('niveau', '2eme')
         .is('deleted_at', null),
       supabase.rpc('calc_modules_non_couverts'),
       supabase.rpc('calc_contrats_renouveler'),
@@ -51,7 +56,7 @@ router.get('/kpis', async (req, res, next) => {
         .eq('convention_active', true)
         .is('deleted_at', null),
       // Étudiants en alerte (avg < 10 AND unexcused > 30%)
-      getAlertStudents(annee),
+      getAlertStudents(annee, niveau),
     ]);
 
     // Calculate satisfaction score
@@ -65,11 +70,11 @@ router.get('/kpis', async (req, res, next) => {
       scoreSatisfaction = Math.round((total / satRows.length) * 10) / 10;
     }
 
-    // Calculate double diplome rate
-    const m2Students = doubleDiplomeRes.data || [];
-    const nbM2 = m2Students.length;
-    const nbDD = m2Students.filter(s => s.double_diplome === true).length;
-    const tauxDoubleDiplome = nbM2 > 0 ? Math.round(1000 * nbDD / nbM2) / 10 : 0;
+    // Calculate double diplôme rate
+    const lvl2Students = doubleDiplomeRes.data || [];
+    const nbLvl2 = lvl2Students.length;
+    const nbDD = lvl2Students.filter(s => s.double_diplome === true).length;
+    const tauxDoubleDiplome = nbLvl2 > 0 ? Math.round(1000 * nbDD / nbLvl2) / 10 : 0;
 
     const kpis = {
       taux_reussite_principale: reussite.data ?? null,
@@ -143,19 +148,25 @@ router.get('/kpis', async (req, res, next) => {
 /**
  * Helper: Get students with avg < 10 AND unexcused absences > 30%
  */
-async function getAlertStudents(annee) {
+async function getAlertStudents(annee, niveau) {
   // Get exam results
-  const { data: resultats } = await supabase
+  let qResults = supabase
     .from('resultats_examens')
-    .select('id_etudiant, moyenne')
+    .select('id_etudiant, moyenne, etudiants!inner(niveau)')
     .eq('annee_univ', annee)
     .is('deleted_at', null);
+  
+  if (niveau) qResults = qResults.eq('etudiants.niveau', niveau);
+  const { data: resultats } = await qResults;
 
   // Get absences
-  const { data: absences } = await supabase
+  let qAbs = supabase
     .from('absences_etudiants')
-    .select('id_etudiant, nb_justifiees, nb_injustifiees')
+    .select('id_etudiant, nb_justifiees, nb_injustifiees, etudiants!inner(niveau)')
     .is('deleted_at', null);
+  
+  if (niveau) qAbs = qAbs.eq('etudiants.niveau', niveau);
+  const { data: absences } = await qAbs;
 
   if (!resultats || !absences) return [];
 

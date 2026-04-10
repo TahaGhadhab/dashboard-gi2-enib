@@ -10,11 +10,20 @@ const router = Router();
 router.get('/kpis', async (req, res, next) => {
   try {
     const annee = req.query.annee_univ || process.env.ANNEE_UNIV;
+    const niveau = req.query.niveau;
+
+    let qVis = supabase.from('visites_entreprises').select('*, partenariats(nom_organisme)').is('deleted_at', null);
+    let qSem = supabase.from('seminaires_industriels').select('*').is('deleted_at', null);
+
+    if (niveau) {
+      qVis = qVis.eq('niveau_participants', niveau);
+      // seminaires doesn't have a niveau column usually, but if it did we'd filter it
+    }
 
     const [partenariatsRes, visitesRes, seminairesRes, unitesRes] = await Promise.all([
       supabase.from('partenariats').select('*').is('deleted_at', null),
-      supabase.from('visites_entreprises').select('*, partenariats(nom_organisme)').is('deleted_at', null),
-      supabase.from('seminaires_industriels').select('*').is('deleted_at', null),
+      qVis,
+      qSem,
       supabase.from('unites_expertise').select('*, permanents(nom, prenom)').is('deleted_at', null),
     ]);
 
