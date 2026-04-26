@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { BriefingBanner } from '@/components/BriefingBanner';
+import { StudentSlideOver } from '@/components/StudentSlideOver';
 import { useKpis } from '@/hooks/useKpis';
 import {
   CheckCircle2, RefreshCcw, Users, Briefcase,
-  Star, AlertTriangle, Award, FileWarning, Handshake, TrendingUp,
+  Star, AlertTriangle, Award, Handshake, TrendingUp,
   Loader2
 } from 'lucide-react';
 
 export default function Dashboard() {
   const { data, loading, error } = useKpis('dashboard');
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -68,14 +71,23 @@ export default function Dashboard() {
           icon={<Star className="h-5 w-5" />}
           variant="neutral"
         />
-        <KPICard
-          index={6}
-          value={data?.etudiants_alertes ?? '—'}
-          label="Étudiants en Alerte"
-          icon={<AlertTriangle className="h-5 w-5" />}
-          variant="danger"
-          reverseTrend
-        />
+        <div
+          className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-blue)] rounded-xl"
+          role="button"
+          tabIndex={0}
+          aria-label="Voir les étudiants en alerte"
+          onClick={() => setSelectedStudentId('__list__')}
+          onKeyDown={(e) => e.key === 'Enter' && setSelectedStudentId('__list__')}
+        >
+          <KPICard
+            index={6}
+            value={data?.etudiants_alertes ?? '—'}
+            label="Étudiants en Alerte"
+            icon={<AlertTriangle className="h-5 w-5" />}
+            variant="danger"
+            reverseTrend
+          />
+        </div>
         <KPICard
           index={7}
           value={k.taux_double_diplome != null ? `${k.taux_double_diplome}%` : '—'}
@@ -98,6 +110,12 @@ export default function Dashboard() {
           variant="neutral"
         />
       </div>
+
+      {/* StudentSlideOver — ouvert depuis la carte Étudiants en Alerte */}
+      <StudentSlideOver
+        studentId={selectedStudentId === '__list__' ? null : selectedStudentId}
+        onClose={() => setSelectedStudentId(null)}
+      />
     </div>
   );
 }
