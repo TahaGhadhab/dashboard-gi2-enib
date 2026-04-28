@@ -345,7 +345,7 @@ export default function Enseignement() {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={k.m1_03_moyenne_promo?.chartData || []}
+                data={k.m1_12_repartition_moyennes?.chartData || []}
                 cx="50%" cy="50%"
                 innerRadius={60} outerRadius={100}
                 paddingAngle={5}
@@ -354,8 +354,8 @@ export default function Enseignement() {
                 stroke="none"
                 style={RECHARTS_CURSOR_STYLE}
               >
-                {(k.m1_03_moyenne_promo?.chartData || []).map((_: any, i: number) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                {(k.m1_12_repartition_moyennes?.chartData || []).map((entry: any, i: number) => (
+                  <Cell key={i} fill={entry.color || CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />

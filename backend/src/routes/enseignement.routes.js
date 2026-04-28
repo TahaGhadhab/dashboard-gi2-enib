@@ -90,6 +90,9 @@ router.get('/kpis', async (req, res, next) => {
     // ─── M1-11: Taux contrôle par semestre ───
     const m1_11 = m1_03; // Same data, different visualization
 
+    // ─── M1-12: Répartition Moyennes Générales ───
+    const m1_12 = calcRepartitionMoyennes(resultats);
+
     res.json({
       annee_univ: annee,
       kpis: {
@@ -104,6 +107,7 @@ router.get('/kpis', async (req, res, next) => {
         'm1_09_validation_modules': m1_09,
         'm1_10_double_diplome': m1_10,
         'm1_11_controle_semestre': m1_11,
+        'm1_12_repartition_moyennes': m1_12,
       },
     });
   } catch (err) {
@@ -332,6 +336,35 @@ function groupBy(arr, key) {
     map[k]++;
   }
   return Object.entries(map).map(([name, count]) => ({ name, count }));
+}
+
+function calcRepartitionMoyennes(resultats) {
+  const avgMap = {};
+  for (const r of resultats) {
+    if (!avgMap[r.id_etudiant]) avgMap[r.id_etudiant] = { sum: 0, count: 0 };
+    if (r.moyenne !== null) {
+      avgMap[r.id_etudiant].sum += parseFloat(r.moyenne);
+      avgMap[r.id_etudiant].count++;
+    }
+  }
+
+  let alerte = 0, normal = 0, excellent = 0;
+  for (const avg of Object.values(avgMap)) {
+    const mean = avg.count > 0 ? avg.sum / avg.count : null;
+    if (mean !== null) {
+      if (mean < 10) alerte++;
+      else if (mean >= 14) excellent++;
+      else normal++;
+    }
+  }
+
+  const chartData = [
+    { name: 'Alerte (<10)', value: alerte, color: 'var(--kpi-danger)' },
+    { name: 'Normal (10-14)', value: normal, color: 'var(--accent-blue)' },
+    { name: 'Excellent (≥14)', value: excellent, color: 'var(--accent-purple)' },
+  ].filter(d => d.value > 0);
+
+  return { chartData };
 }
 
 export default router;
