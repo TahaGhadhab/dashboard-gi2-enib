@@ -104,24 +104,39 @@ function ProgressBar({ value }: { value: number }) {
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
+import type { StudentSummary, StudentLevel as SLevel } from '@/types/student';
+
 interface StudentSlideOverProps {
   studentId: string | null;
   onClose: () => void;
+  /** Optional: pass alert students to show a list view before drill-down */
+  alertStudents?: StudentSummary[];
 }
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
-export function StudentSlideOver({ studentId, onClose }: StudentSlideOverProps) {
+export function StudentSlideOver({ studentId, onClose, alertStudents }: StudentSlideOverProps) {
   const { fetchStudentProfile, role } = useStudentAccess();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Internal drill-down ID for list mode
+  const [drillId, setDrillId] = useState<string | null>(null);
+
+  // Determine the effective student ID to display
+  const effectiveId = studentId === '__list__' ? drillId : studentId;
+  const isListMode = studentId === '__list__' && drillId === null;
   const isOpen = studentId !== null;
 
-  // Fetch profil quand studentId change
+  // Reset drill-down when slide-over closes
   useEffect(() => {
-    if (!studentId) {
+    if (!isOpen) setDrillId(null);
+  }, [isOpen]);
+
+  // Fetch profil quand effectiveId change
+  useEffect(() => {
+    if (!effectiveId) {
       setProfile(null);
       return;
     }
@@ -129,7 +144,7 @@ export function StudentSlideOver({ studentId, onClose }: StudentSlideOverProps) 
     setFetching(true);
     setFetchError(null);
 
-    fetchStudentProfile(Number(studentId)).then((p) => {
+    fetchStudentProfile(Number(effectiveId)).then((p) => {
       if (!cancelled) {
         if (!p) setFetchError('Données non disponibles.');
         else setProfile(p);
@@ -138,7 +153,7 @@ export function StudentSlideOver({ studentId, onClose }: StudentSlideOverProps) 
     });
 
     return () => { cancelled = true; };
-  }, [studentId, fetchStudentProfile]);
+  }, [effectiveId, fetchStudentProfile]);
 
   // Fermeture par Escape
   useEffect(() => {
@@ -173,8 +188,19 @@ export function StudentSlideOver({ studentId, onClose }: StudentSlideOverProps) 
         {/* Header fixe */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] shrink-0">
           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+            {!isListMode && studentId === '__list__' && (
+              <button
+                onClick={() => { setDrillId(null); setProfile(null); }}
+                className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors mr-1"
+                aria-label="Retour à la liste"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+            )}
             <GraduationCap className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Profil Étudiant</span>
+            <span className="text-xs font-bold uppercase tracking-widest">
+              {isListMode ? 'Étudiants en Alerte' : 'Profil Étudiant'}
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -187,7 +213,62 @@ export function StudentSlideOver({ studentId, onClose }: StudentSlideOverProps) 
 
         {/* Corps scrollable */}
         <div className="flex-1 overflow-y-auto">
-          {fetching && <SlideOverSkeleton />}
+          {/* ── LIST MODE ──────────────────────────────────────── */}
+          {isListMode && alertStudents && (
+            <div className="p-4 space-y-2">
+              {alertStudents.length === 0 ? (
+                <div className="rounded-xl border border-[var(--border-subtle)] p-8 text-center text-sm text-[var(--text-muted)]">
+                  Aucun étudiant en alerte.
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">
+                    {alertStudents.length} étudiant{alertStudents.length > 1 ? 's' : ''} en alerte
+                  </p>
+                  {alertStudents.map((s) => (
+                    <button
+                      key={s.id_etudiant}
+                      onClick={() => setDrillId(String(s.id_etudiant))}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-[var(--border-subtle)] hover:border-[var(--accent-blue)]/40 hover:bg-[var(--bg-hover)] transition-all text-left group"
+                    >
+                      <div
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                        style={{ background: getInitialsColor(String(s.id_etudiant)) }}
+                      >
+                        {s.nom[0]?.toUpperCase()}{s.prenom[0]?.toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[var(--text-primary)] truncate">
+                          {s.prenom} {s.nom}
+                        </p>
+                        <p className="text-[10px] text-[var(--text-muted)]">
+                          {getLevelLabel(s.niveau as SLevel)}
+                          {s.classe && <span className="ml-1.5 font-mono">{s.classe}</span>}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                          style={{ color: 'var(--kpi-danger)', background: 'rgba(240,68,56,0.12)' }}
+                        >
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          Alerte
+                        </span>
+                        {s.moyenne !== undefined && (
+                          <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--kpi-danger)' }}>
+                            {s.moyenne.toFixed(1)}/20
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── PROFILE MODE ───────────────────────────────────── */}
+          {!isListMode && fetching && <SlideOverSkeleton />}
 
           {fetchError && (
             <div className="p-6">

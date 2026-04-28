@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { BriefingBanner } from '@/components/BriefingBanner';
 import { StudentSlideOver } from '@/components/StudentSlideOver';
 import { useKpis } from '@/hooks/useKpis';
+import { useStudentAccess } from '@/hooks/useStudentAccess';
 import {
   CheckCircle2, RefreshCcw, Users, Briefcase,
   Star, AlertTriangle, Award, Handshake, TrendingUp,
@@ -11,7 +12,14 @@ import {
 
 export default function Dashboard() {
   const { data, loading, error } = useKpis('dashboard');
+  const { students } = useStudentAccess();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+
+  // Filter alert students for the slide-over list mode
+  const alertStudents = useMemo(
+    () => students.filter((s) => s.statut === 'alerte'),
+    [students]
+  );
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -113,8 +121,9 @@ export default function Dashboard() {
 
       {/* StudentSlideOver — ouvert depuis la carte Étudiants en Alerte */}
       <StudentSlideOver
-        studentId={selectedStudentId === '__list__' ? null : selectedStudentId}
+        studentId={selectedStudentId}
         onClose={() => setSelectedStudentId(null)}
+        alertStudents={alertStudents}
       />
     </div>
   );
