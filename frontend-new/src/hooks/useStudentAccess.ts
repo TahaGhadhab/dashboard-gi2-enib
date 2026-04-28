@@ -12,31 +12,28 @@ import type {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function computeStatus(moyenne: number | undefined): StudentStatus {
-  if (moyenne === undefined) return 'normal';
-  if (moyenne < 10) return 'alerte';
-  if (moyenne >= 14) return 'excellent';
+function computeStatus(moyenne: number | undefined, pctInjust: number): StudentStatus {
+  if (moyenne !== undefined && moyenne < 10 && pctInjust > 30) return 'alerte';
+  if (moyenne !== undefined && moyenne >= 14) return 'excellent';
   return 'normal';
 }
 
 function computeMoyenne(resultats: StudentResult[]): number | undefined {
   if (!resultats.length) return undefined;
-  const valid = resultats.filter(
-    (r) => (r.note_rattrapage ?? r.note_principale) !== null
-  );
+  const valid = resultats.filter((r) => r.moyenne !== null && r.moyenne !== undefined);
   if (!valid.length) return undefined;
-  const total = valid.reduce((sum, r) => sum + (r.note_rattrapage ?? r.note_principale ?? 0), 0);
+  const total = valid.reduce((sum, r) => sum + (r.moyenne ?? 0), 0);
   return Math.round((total / valid.length) * 10) / 10;
 }
 
 function buildAbsences(
-  rows: { nombre_absences: number; justifiees: number }[] | null
+  rows: { nb_justifiees: number; nb_injustifiees: number }[] | null
 ): StudentAbsence {
   if (!rows || rows.length === 0) return { total: 0, justifiees: 0, taux_assiduite: 100 };
-  const total = rows.reduce((s, r) => s + (r.nombre_absences ?? 0), 0);
-  const justifiees = rows.reduce((s, r) => s + (r.justifiees ?? 0), 0);
-  const non_justifiees = total - justifiees;
-  const taux_assiduite = total === 0 ? 100 : Math.max(0, Math.round(((total - non_justifiees) / total) * 100));
+  const justifiees = rows.reduce((s, r) => s + (r.nb_justifiees ?? 0), 0);
+  const injustifiees = rows.reduce((s, r) => s + (r.nb_injustifiees ?? 0), 0);
+  const total = justifiees + injustifiees;
+  const taux_assiduite = total === 0 ? 100 : Math.max(0, Math.round(((total - injustifiees) / total) * 100));
   return { total, justifiees, taux_assiduite };
 }
 
@@ -47,9 +44,10 @@ function buildResultats(rows: any[] | null): StudentResult[] {
     id_matiere: r.matieres?.id_matiere ?? r.id_matiere ?? 0,
     nom_matiere: r.matieres?.nom ?? '—',
     code_matiere: r.matieres?.code ?? '—',
-    note_principale: r.note_principale ?? null,
+    note_principale: r.note_session_principale ?? null,
     note_rattrapage: r.note_rattrapage ?? null,
-    valide: r.valide ?? false,
+    moyenne: r.moyenne ?? null,
+    valide: r.admis ?? false,
     credits: r.matieres?.credits ?? 0,
     semestre: r.semestre ?? '—',
   }));
@@ -111,16 +109,28 @@ export function useStudentAccess(): UseStudentAccessReturn {
         // 4. Notes globales pour calculer les moyennes (RLS filtre les matières)
         const { data: allResultats } = await supabase
           .from('resultats_examens')
-          .select('id_etudiant, note_principale, note_rattrapage, id_matiere')
+          .select('id_etudiant, note_session_principale, note_rattrapage, moyenne, admis, id_matiere')
           .is('deleted_at', null);
 
         const resultatsMap = new Map<
           number,
-          { note_principale: number | null; note_rattrapage: number | null; id_matiere: number }[]
+          { note_session_principale: number | null; note_rattrapage: number | null; moyenne: number | null; admis: boolean | null; id_matiere: number }[]
         >();
         (allResultats ?? []).forEach((r) => {
           if (!resultatsMap.has(r.id_etudiant)) resultatsMap.set(r.id_etudiant, []);
           resultatsMap.get(r.id_etudiant)!.push(r);
+        });
+
+        // 5. Absences globales pour calculer le taux d'assiduité et le statut "alerte"
+        const { data: allAbsences } = await supabase
+          .from('absences_etudiants')
+          .select('id_etudiant, nb_justifiees, nb_injustifiees')
+          .is('deleted_at', null);
+
+        const absencesMap = new Map<number, { nb_justifiees: number; nb_injustifiees: number }[]>();
+        (allAbsences ?? []).forEach((a) => {
+          if (!absencesMap.has(a.id_etudiant)) absencesMap.set(a.id_etudiant, []);
+          absencesMap.get(a.id_etudiant)!.push(a);
         });
 
         const summaries: StudentSummary[] = (etudiantsRaw ?? []).map((et) => {
@@ -129,14 +139,23 @@ export function useStudentAccess(): UseStudentAccessReturn {
             id_matiere: r.id_matiere,
             nom_matiere: '',
             code_matiere: '',
-            note_principale: r.note_principale,
+            note_principale: r.note_session_principale,
             note_rattrapage: r.note_rattrapage,
-            valide: false,
+            moyenne: r.moyenne,
+            valide: r.admis ?? false,
             credits: 0,
             semestre: '',
           }));
           const moyenne = userRole === 'chef_dept' ? computeMoyenne(partialResultats) : undefined;
-          const statut = computeStatus(computeMoyenne(partialResultats));
+          
+          const abs = absencesMap.get(et.id_etudiant) ?? [];
+          const just = abs.reduce((s, a) => s + (a.nb_justifiees ?? 0), 0);
+          const injust = abs.reduce((s, a) => s + (a.nb_injustifiees ?? 0), 0);
+          const totalAbs = just + injust;
+          const pctInjust = totalAbs > 0 ? (injust / totalAbs) * 100 : 0;
+          
+          const statut = computeStatus(computeMoyenne(partialResultats), pctInjust);
+          
           return {
             id_etudiant: et.id_etudiant,
             nom: et.nom,
@@ -145,6 +164,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
             classe: et.classe ?? undefined,
             double_diplome: et.double_diplome ?? false,
             moyenne,
+            taux_assiduite: totalAbs === 0 ? 100 : Math.max(0, Math.round(((totalAbs - injust) / totalAbs) * 100)),
             statut,
             nb_matieres_accessibles: userRole === 'permanent' ? res.length : undefined,
           };
@@ -188,7 +208,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
         supabase
           .from('resultats_examens')
           .select(`
-            note_principale, note_rattrapage, valide, semestre, id_matiere,
+            note_session_principale, note_rattrapage, moyenne, admis, semestre, id_matiere,
             matieres (id_matiere, nom, code, credits)
           `)
           .eq('id_etudiant', studentId)
@@ -196,7 +216,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
 
         supabase
           .from('absences_etudiants')
-          .select('nombre_absences, justifiees, id_matiere')
+          .select('nb_justifiees, nb_injustifiees, id_matiere')
           .eq('id_etudiant', studentId)
           .is('deleted_at', null),
       ]);
@@ -204,7 +224,8 @@ export function useStudentAccess(): UseStudentAccessReturn {
       const resultats = buildResultats(resultatsRaw);
       const absences = buildAbsences(absencesRaw);
       const moyenne = userRole === 'chef_dept' ? computeMoyenne(resultats) : undefined;
-      const statut = computeStatus(computeMoyenne(resultats));
+      const pctInjust = absences.total > 0 ? ((absences.total - absences.justifiees) / absences.total) * 100 : 0;
+      const statut = computeStatus(computeMoyenne(resultats), pctInjust);
 
       // PFE — chef_dept seulement
       let pfe = undefined;

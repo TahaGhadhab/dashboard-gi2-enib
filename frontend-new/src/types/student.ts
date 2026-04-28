@@ -30,6 +30,7 @@ export interface StudentResult {
   code_matiere: string;
   note_principale: number | null;
   note_rattrapage: number | null;
+  moyenne?: number | null;
   valide: boolean;
   credits: number;
   semestre: string;
