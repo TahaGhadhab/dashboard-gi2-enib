@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useKpis } from '@/hooks/useKpis';
 import { useStudentAccess } from '@/hooks/useStudentAccess';
+import { useFilters } from '@/context/FilterContext';
 import { KPICard } from '@/components/KPICard';
 import { StudentSlideOver } from '@/components/StudentSlideOver';
 import { Loader2, CheckCircle2, RefreshCcw, Users, Clock, Search, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -48,7 +49,8 @@ function getInitialsColor(id: string): string {
 // ─── Sous-composant : tableau étudiants ─────────────────────────────────────
 
 function StudentsTable() {
-  const { students, role, loading, error } = useStudentAccess();
+  const { anneeUniv, promo } = useFilters();
+  const { students, role, loading, error } = useStudentAccess(anneeUniv, promo);
   const [search, setSearch] = useState('');
   const [filterLevel, setFilterLevel] = useState<StudentLevel | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<StudentStatus | 'all'>('all');

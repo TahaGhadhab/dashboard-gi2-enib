@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, GraduationCap, AlertTriangle, CheckCircle2, Star, BookOpen, Clock, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStudentAccess } from '@/hooks/useStudentAccess';
+import { useFilters } from '@/context/FilterContext';
 import type { StudentProfile, StudentLevel, StudentStatus } from '@/types/student';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -116,7 +117,8 @@ interface StudentSlideOverProps {
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export function StudentSlideOver({ studentId, onClose, alertStudents }: StudentSlideOverProps) {
-  const { fetchStudentProfile, role } = useStudentAccess();
+  const { anneeUniv } = useFilters();
+  const { fetchStudentProfile, role } = useStudentAccess(anneeUniv);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);

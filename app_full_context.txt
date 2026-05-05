@@ -1,0 +1,59 @@
+================================================================================
+DASHBOARD GÉNIE INDUSTRIEL (ENIB) - CONTEXTE COMPLET DE L'APPLICATION
+================================================================================
+
+1. PRÉSENTATION GÉNÉRALE
+------------------------
+Le Dashboard GI est une solution décisionnelle conçue pour le département Génie 
+Industriel de l'École Nationale d'Ingénieurs de Bizerte (ENIB). L'application 
+centralise les données académiques, administratives et de partenariat pour 
+offrir une vue pilotage en temps réel à travers 45+ indicateurs clés (KPIs).
+
+2. ARCHITECTURE TECHNIQUE
+-------------------------
+L'application repose sur une architecture moderne de type Single Page Application 
+(SPA) avec un backend dédié :
+
+- FRONTEND :
+  * Framework : React + Vite + TypeScript
+  * Design : Tailwind CSS + Shadcn/UI (Composants premium)
+  * Visualisation : Recharts (Radar, Bar, Line, Pie charts)
+  * Déploiement : Vercel
+
+- BACKEND :
+  * Moteur : Node.js + Express.js
+  * Sécurité : Middlewares de gestion d'erreurs et validation
+  * Déploiement : Render
+
+- DONNÉES :
+  * Base de données : Supabase (PostgreSQL) pour les données structurées (étudiants, RH, notes).
+  * Sources Externes : Google Sheets (via Google Forms) pour les enquêtes de satisfaction.
+
+3. LES 5 MODULES MÉTIERS
+------------------------
+M1 : ENSEIGNEMENT & RÉUSSITE
+Gère les résultats des examens, l'assiduité des étudiants, la couverture des 
+programmes et les alertes de décrochage scolaire.
+
+M2 : RESSOURCES HUMAINES
+Assure le suivi de la charge horaire des enseignants permanents et vacataires, 
+la gestion des contrats contractuels et la détection des surcharges.
+
+M3 : ENCADREMENT & STAGES
+Pilote les projets de fin d'études (PFE), les projets juniors (PJM) et les 
+ateliers (AMP). Inclus le suivi du taux d'insertion professionnelle.
+
+M4 : SATISFACTION
+Analyse les retours des étudiants via Google Forms sur la qualité des cours, 
+des infrastructures et de la vie étudiante.
+
+M5 : RAYONNEMENT & PARTENARIATS
+Gère les relations avec le monde socio-économique : conventions industrielles, 
+visites d'entreprises, séminaires et unités d'expertise.
+
+4. FLUX DE DONNÉES
+------------------
+1. Saisie : Via l'interface d'administration ou formulaires Google Forms.
+2. Stockage : Les données transitent vers Supabase ou sont stockées dans Google Sheets.
+3. Calcul : Le backend Express traite les équations métier (calcul de taux, moyennes).
+4. Affichage : Le frontend React consomme l'API pour générer les graphiques interactifs.

@@ -11,8 +11,9 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const { anneeUniv, promo } = useFilters();
   const { data, loading, error } = useKpis('dashboard');
-  const { students } = useStudentAccess();
+  const { students } = useStudentAccess(anneeUniv, promo);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   // Filter alert students for the slide-over list mode

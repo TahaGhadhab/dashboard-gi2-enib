@@ -1,0 +1,57 @@
+================================================================================
+MANUEL D'UTILISATION ET GUIDE DE RÉCUPÉRATION D'ERREURS
+================================================================================
+
+1. MANUEL D'UTILISATION
+-----------------------
+
+A. Navigation et Filtres
+- Utilisez la barre latérale (Sidebar) pour naviguer entre les modules.
+- La barre supérieure (Topbar) permet de filtrer l'ensemble du dashboard par :
+  * Année Universitaire (ex: 2024-2025)
+  * Niveau (1ère, 2ème, 3ème année)
+- Les graphiques sont interactifs : survolez les éléments pour voir les détails.
+
+B. Consultation Étudiante
+- Dans le module "Enseignement", cliquez sur un étudiant dans la table pour ouvrir 
+  son profil complet (KPIs personnels, Absences, Notes).
+
+C. Importation de Données (Satisfaction)
+- Les données de satisfaction proviennent d'un formulaire Google.
+- Après avoir reçu de nouvelles réponses, les données sont automatiquement 
+  synchronisées ou peuvent être importées via le bouton d'importation dans le module 4.
+
+2. GUIDE DE RÉCUPÉRATION D'ERREURS (ERROR RECOVERY)
+---------------------------------------------------
+
+PROBLÈME 1 : Les données de satisfaction ne s'affichent pas
+- Cause : Le Google Sheet ID est erroné ou le fichier n'est pas public.
+- Solution :
+  1. Vérifiez que le Google Sheet est partagé en "Tous les utilisateurs disposant du lien".
+  2. Vérifiez que `GOOGLE_SHEETS_ID` est correct dans les paramètres d'environnement de Render.
+
+PROBLÈME 2 : "Deployment Blocked" sur Vercel (Hobby Plan)
+- Cause : L'auteur du commit Git ne correspond pas au compte Vercel propriétaire.
+- Solution : 
+  1. Changez l'email git local : `git config user.email "votre-email@gmail.com"`.
+  2. Amendez le commit : `git commit --amend --reset-author --no-edit`.
+  3. Force push : `git push origin main --force`.
+
+PROBLÈME 3 : Erreur de connexion au Backend
+- Cause : L'URL du backend sur Render a expiré (mise en veille) ou a changé.
+- Solution :
+  1. Allez sur Vercel > Settings > Environment Variables.
+  2. Vérifiez que `VITE_EXPRESS_URL` pointe bien vers l'URL HTTPS fournie par Render.
+
+PROBLÈME 4 : Tableaux de bord vides ou graphiques à zéro
+- Cause : Aucune donnée ne correspond à l'année universitaire sélectionnée.
+- Solution : Vérifiez la variable `ANNEE_UNIV` dans le fichier `.env` ou changez l'année dans le filtre de la Topbar.
+
+PROBLÈME 5 : Échec de l'export PDF
+- Cause : Le backend Render n'a pas les dépendances nécessaires ou le temps de réponse est trop long.
+- Solution : Vérifiez les logs sur Render. Assurez-vous que le service n'est pas en cours de redémarrage.
+
+3. MAINTENANCE PRÉVENTIVE
+-------------------------
+- Sauvegarde Supabase : Effectuez des exports réguliers des tables critiques via le dashboard Supabase.
+- Google Sheets : Ne changez pas l'ordre des colonnes dans le Google Sheet lié, cela briserait l'importation.

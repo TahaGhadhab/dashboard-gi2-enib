@@ -64,7 +64,7 @@ interface UseStudentAccessReturn {
   fetchStudentProfile: (studentId: number) => Promise<StudentProfile | null>;
 }
 
-export function useStudentAccess(): UseStudentAccessReturn {
+export function useStudentAccess(anneeUniv: string, promo?: string): UseStudentAccessReturn {
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [role, setRole] = useState<UserRole | null>(null);
   const [permanentId, setPermanentId] = useState<number | null>(null);
@@ -98,18 +98,24 @@ export function useStudentAccess(): UseStudentAccessReturn {
         }
 
         // 3. Étudiants — RLS filtre automatiquement selon le rôle
-        const { data: etudiantsRaw, error: etErr } = await supabase
+        let etQuery = supabase
           .from('etudiants')
           .select('id_etudiant, nom, prenom, niveau, classe, double_diplome')
-          .is('deleted_at', null)
-          .order('nom', { ascending: true });
+          .is('deleted_at', null);
+
+        if (promo && promo !== 'Toutes promos') {
+          etQuery = etQuery.eq('niveau', promo);
+        }
+
+        const { data: etudiantsRaw, error: etErr } = await etQuery.order('nom', { ascending: true });
 
         if (etErr) throw new Error('Données non disponibles.');
 
-        // 4. Notes globales pour calculer les moyennes (RLS filtre les matières)
+        // 4. Notes filtrées par année universitaire
         const { data: allResultats } = await supabase
           .from('resultats_examens')
           .select('id_etudiant, note_session_principale, note_rattrapage, moyenne, admis, id_matiere')
+          .eq('annee_univ', anneeUniv)
           .is('deleted_at', null);
 
         const resultatsMap = new Map<
@@ -121,7 +127,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
           resultatsMap.get(r.id_etudiant)!.push(r);
         });
 
-        // 5. Absences globales pour calculer le taux d'assiduité et le statut "alerte"
+        // 5. Absences globales (le calcul du statut alerte se base sur le cumul pour l'instant)
         const { data: allAbsences } = await supabase
           .from('absences_etudiants')
           .select('id_etudiant, nb_justifiees, nb_injustifiees')
@@ -184,7 +190,8 @@ export function useStudentAccess(): UseStudentAccessReturn {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [anneeUniv, promo]);
+
 
   // ─── fetchStudentProfile ──────────────────────────────────────────────────
 
@@ -212,6 +219,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
             matieres (id_matiere, nom, code, credits)
           `)
           .eq('id_etudiant', studentId)
+          .eq('annee_univ', anneeUniv)
           .is('deleted_at', null),
 
         supabase
@@ -234,6 +242,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
           .from('pfe_fiches')
           .select('titre, entreprise, pfe_evaluation(note)')
           .eq('id_etudiant', studentId)
+          .eq('annee_univ', anneeUniv)
           .is('deleted_at', null)
           .maybeSingle();
 
