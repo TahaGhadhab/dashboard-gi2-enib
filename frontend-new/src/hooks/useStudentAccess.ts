@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useFilters } from '@/context/FilterContext';
 import type {
   UserRole,
   StudentLevel,
@@ -65,6 +66,7 @@ interface UseStudentAccessReturn {
 }
 
 export function useStudentAccess(): UseStudentAccessReturn {
+  const { anneeUniv } = useFilters();
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [role, setRole] = useState<UserRole | null>(null);
   const [permanentId, setPermanentId] = useState<number | null>(null);
@@ -107,9 +109,11 @@ export function useStudentAccess(): UseStudentAccessReturn {
         if (etErr) throw new Error('Données non disponibles.');
 
         // 4. Notes globales pour calculer les moyennes (RLS filtre les matières)
+        //    Filtre par annee_univ pour correspondre au calcul backend du KPI
         const { data: allResultats } = await supabase
           .from('resultats_examens')
           .select('id_etudiant, note_session_principale, note_rattrapage, moyenne, admis, id_matiere')
+          .eq('annee_univ', anneeUniv)
           .is('deleted_at', null);
 
         const resultatsMap = new Map<
@@ -184,7 +188,7 @@ export function useStudentAccess(): UseStudentAccessReturn {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [anneeUniv]);
 
   // ─── fetchStudentProfile ──────────────────────────────────────────────────
 
