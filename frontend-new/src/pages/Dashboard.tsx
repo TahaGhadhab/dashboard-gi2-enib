@@ -4,7 +4,6 @@ import { BriefingBanner } from '@/components/BriefingBanner';
 import { StudentSlideOver } from '@/components/StudentSlideOver';
 import { useKpis } from '@/hooks/useKpis';
 import { useStudentAccess } from '@/hooks/useStudentAccess';
-import { useFilters } from '@/context/FilterContext';
 import {
   CheckCircle2, RefreshCcw, Users, Briefcase,
   Star, AlertTriangle, Award, Handshake, TrendingUp,
