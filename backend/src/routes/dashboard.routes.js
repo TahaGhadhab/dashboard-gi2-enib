@@ -139,6 +139,7 @@ router.get('/kpis', async (req, res, next) => {
       kpis,
       alerts,
       etudiants_alertes: nbAlertEtudiants,
+      alert_students: alertEtudiantsRes,
     });
   } catch (err) {
     next(err);
@@ -147,6 +148,7 @@ router.get('/kpis', async (req, res, next) => {
 
 /**
  * Helper: Get students with avg < 10 AND unexcused absences > 30%
+ * Returns full student objects for direct use by the frontend.
  */
 async function getAlertStudents(annee, niveau) {
   // Get exam results
@@ -196,11 +198,37 @@ async function getAlertStudents(annee, niveau) {
     const total = abs.just + abs.injust;
     const pctInjust = total > 0 ? (abs.injust / total) * 100 : 0;
     if (mean < 10 && pctInjust > 30) {
-      alertIds.push(parseInt(id));
+      alertIds.push({
+        id_etudiant: parseInt(id),
+        moyenne: Math.round(mean * 10) / 10,
+        taux_assiduite: total > 0 ? Math.max(0, Math.round(((total - abs.injust) / total) * 100)) : 100,
+      });
     }
   }
 
-  return alertIds;
+  // Fetch student info for alert students
+  if (alertIds.length === 0) return [];
+
+  const { data: students } = await supabase
+    .from('etudiants')
+    .select('id_etudiant, nom, prenom, niveau, classe')
+    .in('id_etudiant', alertIds.map(a => a.id_etudiant))
+    .is('deleted_at', null);
+
+  // Merge student info with computed data
+  return alertIds.map(alert => {
+    const stu = (students || []).find(s => s.id_etudiant === alert.id_etudiant);
+    return {
+      id_etudiant: alert.id_etudiant,
+      nom: stu?.nom ?? '—',
+      prenom: stu?.prenom ?? '—',
+      niveau: stu?.niveau ?? '—',
+      classe: stu?.classe ?? null,
+      moyenne: alert.moyenne,
+      taux_assiduite: alert.taux_assiduite,
+      statut: 'alerte',
+    };
+  });
 }
 
 export default router;

@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { BriefingBanner } from '@/components/BriefingBanner';
 import { StudentSlideOver } from '@/components/StudentSlideOver';
 import { useKpis } from '@/hooks/useKpis';
-import { useStudentAccess } from '@/hooks/useStudentAccess';
 import {
   CheckCircle2, RefreshCcw, Users, Briefcase,
   Star, AlertTriangle, Award, Handshake, TrendingUp,
@@ -12,14 +11,7 @@ import {
 
 export default function Dashboard() {
   const { data, loading, error } = useKpis('dashboard');
-  const { students } = useStudentAccess();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-
-  // Filter alert students for the slide-over list mode
-  const alertStudents = useMemo(
-    () => students.filter((s) => s.statut === 'alerte'),
-    [students]
-  );
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -35,6 +27,12 @@ export default function Dashboard() {
 
   const k = data?.kpis || {};
   const alerts = data?.alerts || [];
+  // Alert students come from the backend (service key, bypasses RLS)
+  const alertStudents = (data?.alert_students || []).map((s: any) => ({
+    ...s,
+    double_diplome: false,
+    statut: 'alerte' as const,
+  }));
 
   return (
     <div className="space-y-4 max-w-7xl px-4 md:px-10 pb-10">
@@ -128,3 +126,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
